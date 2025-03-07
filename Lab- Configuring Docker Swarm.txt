@@ -1,0 +1,87 @@
+Configuring Docker Swarm:
+
+Step1:
+	Install 3 VMs
+	1. Manager
+	2. worker
+	3. Worker
+Step2:
+	Install docker on three nodes with sudo su -
+	$sudo su -
+	$sudo apt-get install docker.io
+Check the status of docker
+	$service docker status
+Ports to be opened: 2377, 7946, 4789
+Check the private ip of a vm to initialize it to docker swarm.
+	$ifconfig
+if ifconfig is not aovailable, install it with $apt install net-tools
+Step3:
+	Initialize Vm1 to Swarm Manager
+	$sudo docker swarm init --advertise-addr <privateip>
+	It will provide command to join worker nodes. Use the command to 	join the owrker nodes.
+Step4: Check the node status with command
+	$sudo docker node ls
+	$docker info [will provide complete information about swarm architechture]
+Step5: To leave any worker from swarm
+	$sudo docker swarm leave [run from the worker]
+Step6: Once the Worker node left, we can delete the node
+	$sudo docker node rm <nodeid>
+Step7: If we want to remove manager node itself from swarm
+	$sudo docker swarm leave --force
+If you forgot to save the doecke swarm token to join nodes, use the command
+	$docker swarm join-token worker
+	$docker swarm join-token manager [to add another manager]
+
+To get the complete information about the docker env on your machine 
+	$docker info
+
+Deploying services and managing docker swarm
+
+	$docker service create --name mywebserver --replicas 3 --publish 80:80 httpd
+Relicas are created to high availability of the service
+
+To check the service
+	$docker service inspect --pretty <servicename>
+
+Check with each node address on browser so ensure that httpd is availalbe on all nodes
+To check the service
+	$docker service ls [list the services and its replica count]
+	$docker service ps <serviceid> [each service is running deferent node]
+[check with docker ps command on each node so find that each container runs in deferent node]	
+
+Try to remove a service container and check that it will be up by swarm
+	$docker rm -f <containername>
+After some time container is up and running
+Delete a container service and check httpd in browser. Container buillds up with in no time.
+
+To remove the service from docker swarm
+	$docker service rm <servicename>
+
+Docker Stack
+
+Create deploy.yml
+
+version: '3'
+services:
+  webserver:
+    image: "httpd:latest"
+    build: .
+    ports:
+      - "8000:8000"
+  appserver:
+    image: "tomcat:latest"
+    ports:
+      - "8080:8080"
+
+
+To deploy the stack
+	$docker stack deploy -c demo.yml mystack
+
+once deployed check with 
+	$docker service ls
+If you want to increase the replicas
+	$docker service scale <serviceid>=6
+To check
+	$docker service ps <serviceid>
+To check on each node for services
+	$docker ps
